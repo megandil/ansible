@@ -1,0 +1,64 @@
+- hosts: servidores
+  become: true
+  tasks:
+     - name: Añadir usuario prueba
+       user:
+         name: prueba
+         password: $6$Duepj5nbDXinwn0b$ime/qa1t3yWzgRrFqfCLXJINzmy9kBTJn/aCOljp9eX/51H1gpt.rxknAfBKrOTH2vcbcDdUlxeHknpT4b97V.
+         shell: /bin/bash
+         comment: pruebita
+         uid: 1010
+         group: 1000    
+     - name: Descargar Fichero Wordpress
+       get_url:
+            url: https://wordpress.org/latest.zip
+            dest: /home/prueba/
+            mode: '0755'
+     - name: Instalar Unzip,GIT,MariaDB y PIP
+       apt:
+            name: "{{ packages }}"
+       vars:
+            packages:
+            - unzip
+            - git
+            - mariadb-server
+            - python3-venv
+            - python3-pip
+            - python3-mysqldb
+     - name: Descomprimir zip de Wordpress
+       ansible.builtin.unarchive:
+            src: /home/prueba/wordpress-5.8.1.zip
+            dest: /home/prueba
+            remote_src: yes
+     - name: Instalar Mysql-Python
+       pip:
+            name: PyMySQL
+     - name: Cambiar contraseña Root de MariaDB
+       mysql_user:
+            name: "root"
+            password: "root"
+            priv: '*.*:ALL,GRANT'
+            host: 'localhost'
+            login_unix_socket: /var/run/mysqld/mysqld.sock
+            state: present
+     - name: Crear .my.cnf
+       template:
+            src: root_cnf.j2
+            dest: /root/.my.cnf
+            owner: root
+            mode: '0600'
+     - name: Crear base de datos 'daniel_wordpress' en MariaDB
+       mysql_db:
+            login_unix_socket: /var/run/mysqld/mysqld.sock
+            name: daniel_wordpress
+            state: present
+     - name: Crear usuario 'daniel' en MariaDB
+       mysql_user:
+            name: daniel
+            password: $6$Duepj5nbDXinwn0b$ime/qa1t3yWzgRrFqfCLXJINzmy9kBTJn/aCOljp9eX/51H1gpt.rxknAfBKrOTH2vcbcDdUlxeHknpT4b97V.
+            priv: '*.*:ALL'
+            state: present
+     - name: Clonar repositorio Git ansible_ejemplos
+       ansible.builtin.git:
+            repo: https://github.com/josedom24/ansible_ejemplos.git
+            dest: /home/prueba/git/
