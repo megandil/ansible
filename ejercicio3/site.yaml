@@ -1,0 +1,10 @@
+
+- hosts: router
+  become: true
+  roles:
+   - role: router
+
+- hosts: cliente
+  become: true
+  roles:
+   - role: cliente

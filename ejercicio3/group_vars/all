@@ -1,0 +1,4 @@
+ip_router: 10.0.0.1
+interfaz_nat: eth1
+ip_cliente: 10.0.0.2
+mascara_red_aislada: 255.255.255.0
